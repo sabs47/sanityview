@@ -1,7 +1,7 @@
 import {combineReducers} from 'redux';
-import containers from './postcontainers';
+import posts from './postcontainers';
 const Allpis = combineReducers({
-    containers: containers,
+    posts: posts,
   
 });
 
