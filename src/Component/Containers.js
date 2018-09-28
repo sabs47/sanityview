@@ -4,13 +4,18 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+import Checkbox from '@material-ui/core/Checkbox';
 import Paper from '@material-ui/core/Paper';
 import {connect} from 'react-redux';
+import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import{fetchpauses} from '../Component/actions/Containersaction'
 import {bindActionCreators} from 'redux';
+import {AccountCircle,Dashboard,AllOut,Pause,PlayArrow} from '@material-ui/icons';
 
 const stable=({
   root: {
-    width: '58.3%',
+    width: '55%',
    // marginTop: theme.spacing.unit * 3,
     overflowX: 'auto',
     float: 'none',
@@ -18,12 +23,13 @@ const stable=({
     
   },
   table: {
-   minWidth: 700,
-    width:300,
+   minWidth: 800,
+    width:400,
   //marginTop:20,
  // marginLef:'20%'
   },
 });
+
 class Containers extends Component {
   
 constructor(props){
@@ -36,10 +42,53 @@ constructor(props){
    command:"",
    ports:"",
    type:"",
-   contid:[]
+   contid:[],
+   containerobject:[],
+   selected: [],
+   id:''
   }
+
+  this.presplaypause = this.presplaypause.bind(this)
 }
 
+onSelectAllClick = event => {
+  if (event.target.checked) {
+    this.setState(state => ({ selected: state.containerobject.map(n => n.id) }));
+    return;
+  }
+  this.setState({ selected: [] });
+};
+
+handleClick = (event, id) => {
+  const { selected } = this.state;
+  const selectedIndex = selected.indexOf(id);
+  let newSelected = [];
+
+  if (selectedIndex === -1) {
+    newSelected = newSelected.concat(selected, id);
+  } else if (selectedIndex === 0) {
+    newSelected = newSelected.concat(selected.slice(1));
+  } else if (selectedIndex === selected.length - 1) {
+    newSelected = newSelected.concat(selected.slice(0, -1));
+  } else if (selectedIndex > 0) {
+    newSelected = newSelected.concat(
+      selected.slice(0, selectedIndex),
+      selected.slice(selectedIndex + 1),
+    );
+  }
+
+  this.setState({ selected: newSelected });
+};
+
+presplaypause(containerobject){
+  //FETCH_PAUSE
+  this.setState({
+    id:containerobject[0].repository
+  })
+  console.log("containerobject[0].repository",containerobject[0].repository)
+this.props.fetchpauses(containerobject[0].repository)
+
+}
   componentDidMount(){
 //const getrepository: shuffleArray(this.props.posts);
 //, this.props.posts[0].ImageID.indexOf(":")
@@ -57,35 +106,24 @@ etat:this.props.posts[0].Status,
 command:this.props.posts[0].Command,
 ports: this.props.posts[0].Ports[0].PrivatePort,
 type:this.props.posts[0].Ports[0].Type,
-
+containerobject:[{"repository":cloneidimage,"ImageId":this.props.posts[0].Image,"Status":this.props.posts[0].State,"Command":this.props.posts[0].Command,"Port":this.props.posts[0].Ports[0].PrivatePort,"type":this.props.posts[0].Ports[0].Type}]
 })
 
 }
-  
+
+isSelected = id => this.state.selected.indexOf(id) !== -1;
+
   
   render() {
-    
-    var text = '{  [' +
-'{ "repository":'+this.state.repository+' , "ImageId":'+this.state.ImagedId+',"Command":'+this.state.command+',"Ports":'+this.state.ports+',"Etat":'+this.state.etat+',"status":'+this.state.status+' },]}';
-const json = JSON.stringify(text);
+   
+   
+    const { onSelectAllClick, order, orderBy, numSelected, rowCount } = this.props;
 
-//    var cont =[]
-  //  cont.push(this.state.repository,this.state.ImagedId,this.state.command,this.state.status,this.state.ports,this.state.etat)
-    
     
 
-    console.log("les ",json)
+    console.log("les ",this.state.containerobject)
     console.log("heus fedfd",this.state.repository);
-    let id = 0;
-    function createData(repository, ImagedId, Command, Ports, Etat,status) {
-      id += 1;
-      return { id, repository, ImagedId, Command, Ports, Etat,status };
-    }
-    
-    const rows = [
-      createData(this.state.ImagedId,this.state.repository,this.state.command,this.state.ports,this.state.etat,this.state.status),
-      
-    ];
+   
     const divStyle = {
       //width:80,
       let:50
@@ -93,41 +131,78 @@ const json = JSON.stringify(text);
     };
 
     return (
-      <div style={{display: 'flex', justifyContent: 'center',marginTop:50}}>
+      <div style={{display: 'flex', justifyContent: 'center',marginTop:90}}>
 
+    
 
 
 <Paper style={stable.root}>
+
       <Table style={stable.table}>
         <TableHead >
           <TableRow>
-            <TableCell>CONTAINERS ID</TableCell>
-            <TableCell numeric>IMAGE</TableCell>
-            <TableCell numeric>COMMAND</TableCell>
-            <TableCell numeric>CREATED</TableCell>
-             <TableCell numeric>PORTS</TableCell>
-            <TableCell numeric>STATUS</TableCell>
+          <TableCell padding="checkbox">
+            <Checkbox
+              indeterminate={numSelected > 0 && numSelected < rowCount}
             
+              onChange={this.onSelectAllClick}
+            />
+          </TableCell>
+          <TableCell>CONTAINER ID</TableCell>
+            <TableCell numeric> IMAGE </TableCell>
+            <TableCell numeric>COMMAND</TableCell>
+            <TableCell numeric>STATUS</TableCell>
+            <TableCell numeric> PORTS </TableCell>
+            <TableCell numeric> TYPE </TableCell>
+         
           </TableRow>
         </TableHead>
-        <TableBody>
-          {rows.map(row => {
+       <TableBody>
+          {this.state.containerobject.map(row => {
+             const isSelected = this.isSelected(row.id);
             return (
-              <TableRow key={row.id}>
+              <TableRow
+              hover
+              onClick={event => this.handleClick(event, row.id)}
+              role="checkbox"
+              aria-checked={isSelected}
+              tabIndex={-1}
+              key={row.id}
+              selected={isSelected}
+            >
+                  <TableCell padding="checkbox">
+                        <Checkbox checked={isSelected} />
+                      </TableCell>
                 <TableCell >
                   {row.repository}
                 </TableCell>
               
+                <TableCell >
+                  {row.ImageId}
+                </TableCell>
+                <TableCell >
+                  {row.Command}
+                </TableCell>
+                <TableCell >
+                  {row.Status}
+                </TableCell>
+                <TableCell >
+                  {row.Port}
+                </TableCell>
+                <TableCell >
+                  {row.type}
+                </TableCell>
                
-                <TableCell numeric>{row.ImagedId}</TableCell>
-                <TableCell numeric>{row.Command}</TableCell>
-                <TableCell numeric>{row.Etat}</TableCell>
-                <TableCell numeric>{row.Ports}/{this.state.type}</TableCell>
-                <TableCell numeric>{row.status}</TableCell>
+             
                
+                     
+
               </TableRow>
+              
             );
+           
           })}
+        
         </TableBody>
 {/*
         <TableBody>
@@ -150,12 +225,23 @@ const json = JSON.stringify(text);
       </Table>
     </Paper>
 
-
+ <div style={{justifyContent: 'right',marginTop:-37,marginLeft:-115}}>
+    <Button variant="contained" color="secondary" 
+     onClick={()=>{this.presplaypause(this.state.containerobject)}}
+    >
+      Supprimer
+    </Button>
+    </div>
       </div>
+      
     );
+   
   }
 }
 
+function matchDispatchToProps(dispatch){
+  return bindActionCreators({fetchpauses: fetchpauses}, dispatch);
+}
 function mapStateToProps(state) {
   return {
    posts: state.posts,
@@ -163,6 +249,7 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps)(Containers);
+
+export default connect(mapStateToProps,matchDispatchToProps)(Containers);
 
 //export default 

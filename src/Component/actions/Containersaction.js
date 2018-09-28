@@ -1,7 +1,9 @@
-import {FETCH_POST } from './types'
+import {FETCH_POST,FETCH_PAUSE } from './types'
 import axios from 'axios';
 
 const apiUrl = 'http://localhost:4243/containers/json';
+
+const apiUrlforpause = 'http://localhost:4243/containers';
 
 export const fetchPosts = (posts) => {
     return {
@@ -18,5 +20,25 @@ export const fetchAllPosts = () => {
         .catch(error => {
           throw(error);
         });
-    };
-  }
+    };}
+    export const fetchpause = id =>{
+      return{
+        type:FETCH_PAUSE,
+        payload: {
+         id 
+        }
+      }}
+      export const fetchpauses = id => {
+    return( dispatch)=>{
+      return axios.post(`${apiUrlforpause}/${id}/stop`)
+   .then(response=>{
+    dispatch(fetchpause(response.data))
+
+    })
+    .catch(error=>{
+throw(error);
+
+    })
+
+  }}
+  
